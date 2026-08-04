@@ -26,13 +26,19 @@ let reviews = {};
 
 document.querySelector("#login-form").addEventListener("submit", async e => {
   e.preventDefault();
-  password = document.querySelector("#password").value.trim();
-  if (password !== "sinjin") return showLoginError("비밀번호가 올바르지 않습니다.");
-  if (!window.APPS_SCRIPT_URL || window.APPS_SCRIPT_URL.includes("PASTE_")) return showLoginError("관리자가 아직 Google 저장 주소를 설정하지 않았습니다.");
+  password = document.querySelector("#password").value.trim().toLowerCase();
+  if (password !== "sinjin") {
+    showLoginError("비밀번호가 올바르지 않습니다. 영문으로 sinjin을 입력하세요.");
+    return;
+  }
   document.querySelector("#login").hidden = true;
   document.querySelector("#app").hidden = false;
   render();
-  loadReviews();
+  if (!window.APPS_SCRIPT_URL || window.APPS_SCRIPT_URL.includes("PASTE_")) {
+    showMessage("Google 저장 주소가 설정되지 않아 저장 자료를 불러올 수 없습니다.", true);
+  } else {
+    loadReviews();
+  }
 });
 
 function showLoginError(text) { document.querySelector("#login-error").textContent = text; }
