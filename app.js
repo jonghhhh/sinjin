@@ -112,13 +112,29 @@ function render() {
   document.querySelector("#progress").textContent = `${count} / ${proposals.length} 입력 완료`;
 }
 
+function waitForSaveTarget() {
+  return new Promise(resolve => {
+    const iframe = document.querySelector('iframe[name="save-target"]');
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      iframe.removeEventListener("load", finish);
+      resolve();
+    };
+    iframe.addEventListener("load", finish);
+    setTimeout(finish, 8000);
+  });
+}
+
 function saveReview(event, id) {
   const form = event.target;
   const button = form.querySelector("button");
   button.disabled = true;
   button.textContent = "저장 중…";
-  setTimeout(async () => {
+  (async () => {
     try {
+      await waitForSaveTarget();
       if (await loadReviews()) {
         showMessage(`${id} 심사 내용이 저장되었습니다.`);
       }
@@ -126,7 +142,7 @@ function saveReview(event, id) {
       button.disabled = false;
       button.textContent = "저장";
     }
-  }, 1600);
+  })();
   return true;
 }
 
