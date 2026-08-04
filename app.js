@@ -28,57 +28,18 @@ const criteria = [
   ["academicValue", "학술적 가치", 20],
   ["growth", "연구자의 성장 가능성", 10]
 ];
-const REVIEWER_LINKS = {
-  "a0e76578a6": "이종혁",
-  "6e67d2bdfe": "이소은",
-  "24c415d4a7": "진보래",
-  "41dc32abe7": "정낙원"
-};
-let password = "";
+const password = "sinjin";
 let reviews = {};
 
-function enterApp(reviewerName) {
+function boot() {
   if (!window.APPS_SCRIPT_URL || window.APPS_SCRIPT_URL.includes("PASTE_")) {
-    showLoginError("관리자가 아직 Google 저장 주소를 설정하지 않았습니다.");
+    showMessage("관리자가 아직 Google 저장 주소를 설정하지 않았습니다.", true);
     return;
   }
-  password = "sinjin";
-  document.querySelector("#login").hidden = true;
-  document.querySelector("#app").hidden = false;
   render();
-  loadReviews().then(ok => {
-    if (ok && reviewerName) showMessage(`${reviewerName}님, 환영합니다.`);
-  });
+  loadReviews();
 }
-
-document.querySelector("#login-form").addEventListener("submit", e => {
-  e.preventDefault();
-  try {
-    const entered = document.querySelector("#password").value.trim().toLowerCase();
-    showLoginError("");
-
-    if (entered !== "sinjin") {
-      showLoginError("비밀번호가 올바르지 않습니다. 영문으로 sinjin을 입력하세요.");
-      return;
-    }
-    enterApp();
-  } catch (error) {
-    showLoginError("오류가 발생했습니다: " + (error && error.message ? error.message : error));
-  }
-});
-
-(function tryAutoLogin() {
-  try {
-    const key = new URLSearchParams(window.location.search).get("key");
-    if (key && REVIEWER_LINKS[key]) enterApp(REVIEWER_LINKS[key]);
-  } catch (error) {
-    showLoginError("자동 로그인 오류: " + (error && error.message ? error.message : error));
-  }
-})();
-
-function showLoginError(text) {
-  document.querySelector("#login-error").textContent = text;
-}
+boot();
 
 function jsonp(params) {
   return new Promise((resolve, reject) => {
