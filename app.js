@@ -41,11 +41,11 @@ function boot() {
 }
 boot();
 
-function jsonp(params) {
+function jsonp(params, timeoutMs = 20000) {
   return new Promise((resolve, reject) => {
     const callback = `gasCallback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     const script = document.createElement("script");
-    const timer = setTimeout(() => { cleanup(); reject(new Error("timeout")); }, 12000);
+    const timer = setTimeout(() => { cleanup(); reject(new Error("timeout")); }, timeoutMs);
     function cleanup() {
       clearTimeout(timer);
       delete window[callback];
@@ -61,7 +61,11 @@ function jsonp(params) {
   });
 }
 
-async function loadReviews() {
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function loadReviews(retriesLeft = 2) {
   try {
     const data = await jsonp({ action: "list" });
     reviews = Object.fromEntries((Array.isArray(data.reviews) ? data.reviews : [])
@@ -70,7 +74,11 @@ async function loadReviews() {
     render();
     return true;
   } catch (error) {
-    showMessage("저장 자료를 불러오지 못했습니다. Apps Script 배포 설정을 확인해 주세요.", true);
+    if (retriesLeft > 0) {
+      await delay(1500);
+      return loadReviews(retriesLeft - 1);
+    }
+    showMessage("저장 자료를 불러오지 못했습니다. 네트워크 상태를 확인 후 새로고침해 주세요.", true);
     return false;
   }
 }
