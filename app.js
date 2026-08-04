@@ -1,3 +1,4 @@
+window.__appJsLoaded = true;
 const proposals = [
   ["26-신진-01", "AI 라벨 효과, AI의 기여도 평가 그리고 AI가 생성한 이미지 품질이 뉴스 신뢰도에 미치는 영향에 대한 연구", "이종혁"],
   ["26-신진-02", "생성형 AI 건강정보 특성이 건강행동의도에 미치는 영향: AI 신뢰의 매개효과와 자기효능감의 조절효과", "이종혁"],
@@ -32,22 +33,26 @@ let reviews = {};
 
 document.querySelector("#login-form").addEventListener("submit", e => {
   e.preventDefault();
-  password = document.querySelector("#password").value.trim().toLowerCase();
-  showLoginError("");
+  try {
+    password = document.querySelector("#password").value.trim().toLowerCase();
+    showLoginError("");
 
-  if (password !== "sinjin") {
-    showLoginError("비밀번호가 올바르지 않습니다. 영문으로 sinjin을 입력하세요.");
-    return;
-  }
-  if (!window.APPS_SCRIPT_URL || window.APPS_SCRIPT_URL.includes("PASTE_")) {
-    showLoginError("관리자가 아직 Google 저장 주소를 설정하지 않았습니다.");
-    return;
-  }
+    if (password !== "sinjin") {
+      showLoginError("비밀번호가 올바르지 않습니다. 영문으로 sinjin을 입력하세요.");
+      return;
+    }
+    if (!window.APPS_SCRIPT_URL || window.APPS_SCRIPT_URL.includes("PASTE_")) {
+      showLoginError("관리자가 아직 Google 저장 주소를 설정하지 않았습니다.");
+      return;
+    }
 
-  document.querySelector("#login").hidden = true;
-  document.querySelector("#app").hidden = false;
-  render();
-  loadReviews();
+    document.querySelector("#login").hidden = true;
+    document.querySelector("#app").hidden = false;
+    render();
+    loadReviews();
+  } catch (error) {
+    showLoginError("오류가 발생했습니다: " + (error && error.message ? error.message : error));
+  }
 });
 
 function showLoginError(text) {
@@ -66,7 +71,7 @@ function jsonp(params) {
     }
     window[callback] = data => {
       cleanup();
-      data?.ok ? resolve(data) : reject(new Error(data?.error || "error"));
+      (data && data.ok) ? resolve(data) : reject(new Error((data && data.error) || "error"));
     };
     script.onerror = () => { cleanup(); reject(new Error("network")); };
     script.src = `${window.APPS_SCRIPT_URL}?${new URLSearchParams({ ...params, password, callback })}`;
@@ -105,7 +110,7 @@ function render() {
       <form class="review-form" action="${escapeHtml(window.APPS_SCRIPT_URL)}" method="post" target="save-target" onsubmit="return saveReview(event, '${id}')">
         <input type="hidden" name="action" value="save"><input type="hidden" name="password" value="${escapeHtml(password)}"><input type="hidden" name="proposalId" value="${id}">
         <div class="actions"><label>심사자<input name="reviewer" value="${escapeHtml(review.reviewer || assigned)}" maxlength="40" required></label><a href="public/pdfs/${id}.pdf" target="_blank" rel="noopener">연구계획서 PDF 열기 ↗</a></div>
-        <div class="scores">${criteria.map(([key, label, max]) => `<label>${label}<small> / ${max}점</small><input name="${key}" type="number" min="0" max="${max}" step="1" value="${review[key] ?? ""}"></label>`).join("")}</div>
+        <div class="scores">${criteria.map(([key, label, max]) => `<label>${label}<small> / ${max}점</small><input name="${key}" type="number" min="0" max="${max}" step="1" value="${review[key] == null ? "" : review[key]}"></label>`).join("")}</div>
         <label class="comments">기타의견<textarea name="comments" rows="4" maxlength="5000">${escapeHtml(review.comments || "")}</textarea></label>
         <div class="save"><span>총점 <b>${total}</b> / 100</span><button type="submit">저장</button></div>
       </form></details>`;
@@ -143,7 +148,7 @@ function showMessage(text, error = false) {
 }
 
 function escapeHtml(value) {
-  return String(value ?? "").replace(/[&<>'"]/g, character => ({
+  return String(value == null ? "" : value).replace(/[&<>'"]/g, character => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"
   }[character]));
 }

@@ -28,7 +28,23 @@
   </main>
 
   <iframe name="save-target" hidden title="저장 결과"></iframe>
-  <script src="config.js?v=4"></script>
-  <script src="app.js?v=4"></script>
+  <script>
+    window.addEventListener("error", function (e) {
+      var el = document.querySelector("#login-error");
+      if (el && !document.querySelector("#app:not([hidden])")) {
+        el.textContent = "스크립트 오류: " + e.message + " (" + (e.filename || "").split("/").pop() + ":" + e.lineno + ")";
+      }
+    });
+    setTimeout(function () {
+      if (!window.__appJsLoaded) {
+        var el = document.querySelector("#login-error");
+        if (el && !el.textContent) {
+          el.textContent = "페이지 스크립트를 불러오지 못했습니다. 새로고침하거나 다른 브라우저/네트워크에서 시도해 주세요.";
+        }
+      }
+    }, 4000);
+  </script>
+  <script src="config.js?v=5"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>
