@@ -26,7 +26,7 @@ let reviews = {};
 
 document.querySelector("#login-form").addEventListener("submit", async e => {
   e.preventDefault();
-  password = document.querySelector("#password").value;
+  password = document.querySelector("#password").value.trim();
   if (password !== "sinjin") return showLoginError("비밀번호가 올바르지 않습니다.");
   if (!window.APPS_SCRIPT_URL || window.APPS_SCRIPT_URL.includes("PASTE_")) return showLoginError("관리자가 아직 Google 저장 주소를 설정하지 않았습니다.");
   document.querySelector("#login").hidden = true;
